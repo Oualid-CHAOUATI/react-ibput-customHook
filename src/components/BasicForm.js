@@ -1,38 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import SimpleInput from "./SimpleInput";
+import { useInputHook } from "../hooks/useInoutHook";
 
 const BasicForm = (props) => {
   const [formIsValid, setFormIsValid] = useState(null);
-  // const checkFormValidity = (string) => {
-  //   const object = {
-  //     emailIsValid,
-  //     namelIsValid,
-  //     lastNamelIsValid: lastNameIsValid,
-  //   };
 
-  //   console.log({ string });
-  //   const keys = Object.keys(object).filter((key) => key === string);
-  //   console.table(keys);
-  //   let validity = true;
-
-  //   for (let key in keys) {
-  //     if (!object[key]) {
-  //       validity = false;
-  //       break;
-  //     }
-  //   }
-
-  //   setFormIsValid(validity);
-  // };
-  const checkFormValidity = () => {};
-
-  const verifyNameValidity = (name) => {
-    return name.trim() !== "";
+  const verifyNameValidity = (value) => {
+    console.log(value);
+    return value.trim() !== "";
   };
   const verifyLastNameValidity = verifyNameValidity;
-  const verifyEmailValidity = (email) => {
-    return email.trim() !== "" && email.includes("@");
+  const verifyEmailValidity = (value) => {
+    return value.trim() !== "" && value.includes("@");
   };
+
+  const {
+    valueIsValid: nameIsValid,
+    setValueIsValid: setNameIsValid,
+    resetValueAndValidity: resetNameValueAndValidity,
+    checkIfValueIsValid: checkIfNameIsValid,
+    inputRef: nameInputRef,
+  } = useInputHook(verifyNameValidity);
+  const {
+    valueIsValid: lastNameIsValid,
+    setValueIsValid: setLastNameIsValid,
+    resetValueAndValidity: resetLastNameValueAndValidity,
+    checkIfValueIsValid: checkIfLastNameIsValid,
+    inputRef: lastNameInputRef,
+  } = useInputHook(verifyLastNameValidity);
+
+  const {
+    valueIsValid: emailIsValid,
+    setValueIsValid: setEmailIsValid,
+    resetValueAndValidity: resetEmailValueAndValidity,
+    checkIfValueIsValid: checkIfEmailIsValid,
+    inputRef: emailInputRef,
+  } = useInputHook(verifyEmailValidity);
 
   const nameErrorMessage = "name must not be empty ";
   const lastNameErrorMessage = "lastname must not be empty ";
@@ -40,34 +43,29 @@ const BasicForm = (props) => {
   const nameLabel = "name";
   const lastNameLabel = "lastname";
   const emailLabel = "Email";
-  const [nameIsValid, setNameIsValid] = useState(null);
-  const nameInputRef = useRef();
-  const lastNameInputRef = useRef();
-  const emailInputRef = useRef();
-  const [lastNameIsValid, setLastNameIsValid] = useState(null);
-  const [emailIsValid, setEmailIsValid] = useState(null);
 
   useEffect(() => {
     setFormIsValid(nameIsValid && lastNameIsValid && emailIsValid);
   }, [nameIsValid, lastNameIsValid, emailIsValid]);
+
   const submitHandler = (e) => {
     e.preventDefault();
-    //si nameIsValid =false => setToFalse => ne rien faire
-    // si nameIsValid ==null => setToFasle => afficher l'erreur
-    if (!nameIsValid) setNameIsValid(false);
-    if (!lastNameIsValid) setLastNameIsValid(false);
-    //dernier élément à vérifier donc return si
-    if (!lastNameIsValid) setLastNameIsValid(false);
+
+    //! ce bloc sert uniquement si quequn enlève la valeur disabled manuellement avec l'insecteur, ce qui donnera possibilité à la soumission du formulaire
+
+    //si value =false => setToFalse => ne rien faire
+    // si value ==null (erreur non affichée) => setToFasle => afficher l'erreur
+    checkIfNameIsValid();
+    checkIfLastNameIsValid();
+    checkIfEmailIsValid();
+    // --------------------------
+
     if (!formIsValid) return;
 
     // else
-    nameInputRef.current.value = "";
-    lastNameInputRef.current.value = "";
-    emailInputRef.current.value = "";
-
-    setNameIsValid(null);
-    setLastNameIsValid(null);
-    setEmailIsValid(null);
+    resetNameValueAndValidity();
+    resetLastNameValueAndValidity();
+    resetEmailValueAndValidity();
 
     console.log("valid name");
   };
@@ -76,9 +74,7 @@ const BasicForm = (props) => {
       <div className="control-group">
         <SimpleInput
           {...{
-            setFormIsValid,
-            checkFormValidity,
-            verifyInputValidity: verifyNameValidity,
+            verifyInputValidity: checkIfNameIsValid,
             valueIsValid: nameIsValid,
             setValueIsValid: setNameIsValid,
             errorMessage: nameErrorMessage,
@@ -88,9 +84,7 @@ const BasicForm = (props) => {
         />
         <SimpleInput
           {...{
-            setFormIsValid,
-            checkFormValidity,
-            verifyInputValidity: verifyLastNameValidity,
+            verifyInputValidity: checkIfLastNameIsValid,
             valueIsValid: lastNameIsValid,
             setValueIsValid: setLastNameIsValid,
             errorMessage: lastNameErrorMessage,
@@ -100,9 +94,7 @@ const BasicForm = (props) => {
         />
         <SimpleInput
           {...{
-            setFormIsValid,
-            checkFormValidity,
-            verifyInputValidity: verifyEmailValidity,
+            verifyInputValidity: checkIfEmailIsValid,
             valueIsValid: emailIsValid,
             setValueIsValid: setEmailIsValid,
             errorMessage: emailErrorMessage,
